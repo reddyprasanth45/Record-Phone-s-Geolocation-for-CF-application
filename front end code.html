@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CFM + Front-End Geolocation</title>
+    <style>
+           body {
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        .container {
+            padding: 20px;
+            margin: auto;
+
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        #getCoordinates {
+            margin-top: 20px;
+            background-color: #f5c542;
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #coordinates {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .accent {
+            color: #f5c542;
+        }
+        
+        #map {
+            width: 100%;
+            height: 300px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CFM + front-end code that reliably records phone/ laptop/ device geolocation without 3rd-party API</h1>
+	<h3 style="color:red">Best works on Smartphones due to their built in geolocation capabilities. With Laptops, it is a bit tricky (determines using nearby wifi / ip address)</h3>
+	<h3>We can communicate technician's location periodically to the ColdFusion server and this information is passed aliong to Dispatcher providing real time location sharing experience between Technicians and Dispatcher enabling seamless coordination</h3>
+<h3>Imagine yourself to be a Technician & your geo coordinates will be shared perodically.  For a quick demonstration purpose, I've created a button, when clicked, displays your GeoCoordinates</h3>
+        <button id="getCoordinates">Get My Coordinates</button>
+        <div id="coordinates">
+            <p class="accent">Latitude:</p>
+            <p id="latitude"></p>
+            <p class="accent">Longitude:</p>
+            <p id="longitude"></p>
+            <p class="accent">Accuracy:</p>
+            <p id="accuracy"></p>
+            <p class="accent">Location:</p>
+            <p id="location"></p>
+        </div>
+        <div id="map"></div>
+    </div>
+
+    <script>
+        const getCoordinatesBtn = document.getElementById("getCoordinates");
+        const coordinatesDiv = document.getElementById("coordinates");
+        const latitudeElement = document.getElementById("latitude");
+        const longitudeElement = document.getElementById("longitude");
+        const accuracyElement = document.getElementById("accuracy");
+        const locationElement = document.getElementById("location");
+        const mapDiv = document.getElementById("map");
+
+        getCoordinatesBtn.addEventListener("click", () => {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+                const accuracy = position.coords.accuracy;
+
+                latitudeElement.textContent = latitude;
+                longitudeElement.textContent = longitude;
+                accuracyElement.textContent = `${accuracy} meters`;
+
+                // Use a reverse geocoding service to get location name
+                fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const locationName = data.display_name;
+                        locationElement.textContent = locationName;
+                    })
+                    .catch(error => {
+                        locationElement.textContent = "Location not available";
+                    });
+
+                // Display map
+                const map = new google.maps.Map(mapDiv, {
+                    center: { lat: latitude, lng: longitude },
+                    zoom: 15
+                });
+
+                const marker = new google.maps.Marker({
+                    position: { lat: latitude, lng: longitude },
+                    map: map,
+                    title: "Location"
+                });
+
+                coordinatesDiv.style.display = "block";
+            });
+        });
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDu67CqV6xxg1wzmW-xBc6RQ8p8KUo__pM&libraries=places"></script>
+</body>
+</html>
